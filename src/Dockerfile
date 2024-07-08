@@ -10,7 +10,7 @@ WORKDIR /src
 COPY . .
 RUN dotnet restore
 RUN dotnet build -c $BUILD_CONFIGURATION --no-restore
-RUN dotnet test --no-build
+RUN dotnet test
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
