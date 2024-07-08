@@ -1,6 +1,6 @@
 @AspLongTaskCancellation_HostAddress = http://localhost:5230
 
-GET {{AspLongTaskCancellation_HostAddress}}/weatherforecast/
+GET {{AspLongTaskCancellation_HostAddress}}/LongRunning/WithoutCancellationToken
 Accept: application/json
 
 ###
