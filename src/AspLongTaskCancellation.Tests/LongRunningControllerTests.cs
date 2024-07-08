@@ -34,7 +34,9 @@ public class LongRunningControllerTests {
     [Fact]
     public async Task WithoutCancellationToken_LogsMessages() {
         // Act
+        var delays = new List<int> { 1, 1, 1 };
         await _controller.WithoutCancellationToken([1, 1, 1]);
+        var totalRepeat = delays.Count;
 
         // Assert
         _loggerMock.Verify(
@@ -46,31 +48,63 @@ public class LongRunningControllerTests {
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
             Times.Once);
 
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Task 1 was done")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
-            Times.Once);
+        for (var i = 0; i < totalRepeat; i++) {
+            _loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"Task {i + 1} was done")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
+                Times.Once);
+        }
+    }
 
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Task 2 was done")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
-            Times.Once);
+    [Fact]
+    public async Task WithCancellationToken_ReturnsOkResult() {
+        // Arrange
+        var cancellationToken = new CancellationToken();
 
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Information,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Task 3 was done")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
-            Times.Once);
+        // Act
+        var response = await _controller.WithCancellationToken(cancellationToken, 2, 1);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var value = Assert.IsType<ResponseMessageDto>(okResult.Value);
+        Assert.Equal("Long-running request completed successfully.", value.Message);
+    }
+
+    [Fact]
+    public async Task WithCancellationToken_ThrowsWhenCancelled() {
+        // Arrange
+        var cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = cancellationTokenSource.Token;
+        await cancellationTokenSource.CancelAsync();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            _controller.WithCancellationToken(cancellationToken));
+    }
+
+    [Fact]
+    public async Task WithCancellationToken_LogsMessages() {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        const int totalRepeat = 2;
+
+        // Act
+        await _controller.WithCancellationToken(cancellationToken, totalRepeat, 1);
+
+        // Assert
+        for (var i = 0; i < totalRepeat; i++) {
+            _loggerMock.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains($"{i + 1}/{totalRepeat}")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
+                Times.Once);
+        }
     }
 }

@@ -11,10 +11,27 @@ public class LongRunningController(ILogger<LongRunningController> logger) : Cont
         delays ??= [4000, 8000, 15000];
 
         logger.LogInformation("{Id} - Started", HttpContext.TraceIdentifier);
-        for (var i = 0; i < delays.Count; i++) 
+        for (var i = 0; i < delays.Count; i++)
             await DelayAsync($"Task {i + 1}", delays[i]);
 
         return Ok(new ResponseMessageDto("Request completed successfully."));
+    }
+
+
+    [HttpGet("WithCancellationToken")]
+    public async Task<ActionResult<ResponseMessageDto>> WithCancellationToken(CancellationToken cancellationToken,
+        int? total = null, int? delay = null) {
+        total ??= 10;
+        delay ??= 1000;
+
+        for (var i = 0; i < total; i++) {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await Task.Delay((int)delay, cancellationToken);
+            logger.LogInformation("{Id}: {Index}/{Total}", HttpContext.TraceIdentifier, i + 1, total);
+        }
+
+        return Ok(new ResponseMessageDto("Long-running request completed successfully."));
     }
 
     private async Task DelayAsync(string taskName, int delayInMilliseconds) {

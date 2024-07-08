@@ -4,3 +4,5 @@ GET {{AspLongTaskCancellation_HostAddress}}/LongRunning/WithoutCancellationToken
 Accept: application/json
 
 ###
+GET {{AspLongTaskCancellation_HostAddress}}/LongRunning/WithCancellationToken
+Accept: application/json
