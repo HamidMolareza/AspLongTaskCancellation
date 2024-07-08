@@ -169,6 +169,10 @@ The purpose of this project is to demonstrate how to use `CancellationToken` in 
 
 This project addresses the issue of long-running tasks continuing to execute even after a user cancels their request. This can lead to wasted resources and reduced performance. By implementing `CancellationToken`, the project shows how to cancel these tasks, thereby improving resource management and application efficiency.
 
+## Related
+
+- [Should I always add CancellationToken to my controller actions?](https://stackoverflow.com/questions/50329618/should-i-always-add-cancellationtoken-to-my-controller-actions)
+
 ## License
 
 This project is licensed under the **GPLv3**.
