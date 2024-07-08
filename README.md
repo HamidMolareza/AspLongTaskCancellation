@@ -1,7 +1,6 @@
 <div align="center">
   <h1>ASP Long Task Cancellation</h1>
   <br />
-  <br />
   <a href="https://github.com/HamidMolareza/AspLongTaskCancellation/issues/new?assignees=&labels=bug&template=BUG_REPORT.md&title=bug%3A+">Report a Bug</a>
   ·
   <a href="https://github.com/HamidMolareza/AspLongTaskCancellation/issues/new?assignees=&labels=enhancement&template=FEATURE_REQUEST.md&title=feat%3A+">Request a Feature</a>
