@@ -10,11 +10,15 @@ namespace AspLongTaskCancellation.Tests;
 public class LongRunningControllerTests {
     private readonly Mock<ILogger<LongRunningController>> _loggerMock;
     private readonly LongRunningController _controller;
+    private readonly CancellationTokenSource _cancellationTokenSource;
 
     public LongRunningControllerTests() {
         _loggerMock = new Mock<ILogger<LongRunningController>>();
         _controller = new LongRunningController(_loggerMock.Object);
-        var httpContext = new DefaultHttpContext();
+        _cancellationTokenSource = new CancellationTokenSource();
+        var httpContext = new DefaultHttpContext {
+            RequestAborted = _cancellationTokenSource.Token
+        };
         _controller.ControllerContext = new ControllerContext {
             HttpContext = httpContext
         };
@@ -62,11 +66,8 @@ public class LongRunningControllerTests {
 
     [Fact]
     public async Task WithCancellationToken_ReturnsOkResult() {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-
         // Act
-        var response = await _controller.WithCancellationToken(cancellationToken, 2, 1);
+        var response = await _controller.WithCancellationToken(2, 1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
@@ -77,23 +78,20 @@ public class LongRunningControllerTests {
     [Fact]
     public async Task WithCancellationToken_ThrowsWhenCancelled() {
         // Arrange
-        var cancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = cancellationTokenSource.Token;
-        await cancellationTokenSource.CancelAsync();
+        await _cancellationTokenSource.CancelAsync();
 
         // Act & Assert
         await Assert.ThrowsAsync<OperationCanceledException>(() =>
-            _controller.WithCancellationToken(cancellationToken));
+            _controller.WithCancellationToken());
     }
 
     [Fact]
     public async Task WithCancellationToken_LogsMessages() {
         // Arrange
-        var cancellationToken = new CancellationToken();
         const int totalRepeat = 2;
 
         // Act
-        await _controller.WithCancellationToken(cancellationToken, totalRepeat, 1);
+        await _controller.WithCancellationToken(totalRepeat, 1);
 
         // Assert
         for (var i = 0; i < totalRepeat; i++) {
