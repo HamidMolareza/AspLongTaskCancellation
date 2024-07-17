@@ -19,15 +19,14 @@ public class LongRunningController(ILogger<LongRunningController> logger) : Cont
 
 
     [HttpGet("WithCancellationToken")]
-    public async Task<ActionResult<ResponseMessageDto>> WithCancellationToken(CancellationToken cancellationToken,
-        int? total = null, int? delay = null) {
+    public async Task<ActionResult<ResponseMessageDto>> WithCancellationToken(int? total = null, int? delay = null) {
         total ??= 10;
         delay ??= 1000;
 
         for (var i = 0; i < total; i++) {
-            cancellationToken.ThrowIfCancellationRequested();
+            HttpContext.RequestAborted.ThrowIfCancellationRequested();
 
-            await Task.Delay((int)delay, cancellationToken);
+            await Task.Delay((int)delay, HttpContext.RequestAborted);
             logger.LogInformation("{Id}: {Index}/{Total}", HttpContext.TraceIdentifier, i + 1, total);
         }
 
